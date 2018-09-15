@@ -1,0 +1,52 @@
+version: '3'
+services:
+
+  redis:
+    ports:
+      - "16379:6379"
+    image: redis:latest
+
+  postgres:
+    image: postgres:10
+    ports:
+      - "15432:5432"
+
+  worker:
+    build: .
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings.docker
+    command: >
+      /bin/bash -c "
+        ./wait-service-started.sh postgres 5432
+        ./wait-service-started.sh redis 6379
+        celery -A core worker -l info
+      "
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+        - media:/comment_service/media
+
+  app:
+    build: .
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings.docker
+    command: >
+      /bin/bash -c "
+        ./wait-service-started.sh postgres 5432
+        ./wait-service-started.sh redis 6379
+        createdb -h postgres -p 5432 -U postgres comments || true
+        ./manage.py migrate
+        ./manage.py demo
+        python3.7 manage.py runserver 0.0.0.0:9000
+      "
+    ports:
+      - "9000:9000"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - media:/comment_service/media
+
+volumes:
+    media:

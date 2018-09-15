@@ -1,0 +1,38 @@
+{% extends "rest_framework/base.html" %}
+{% block script %}
+    {% if view.detail %}
+    <script type="application/javascript">
+
+        let socket = new WebSocket(`ws://${location.host}/object_updates`);
+        socket.onopen = function () {
+            console.log("Соединение установлено.");
+            {% with view.get_object as obj %}
+            socket.send(JSON.stringify({
+                action: 'subscribe',
+                content_type: {{ obj.content_type_id }},
+                object_id: {{ obj.object_id }}
+            }));
+            {% endwith %}
+        };
+
+        socket.onclose = function (event) {
+            if (event.wasClean) {
+                console.log('Соединение закрыто чисто');
+            } else {
+                console.log('Обрыв соединения'); // например, "убит" процесс сервера
+            }
+            console.log('Код: ' + event.code + ' причина: ' + event.reason);
+        };
+
+        socket.onmessage = function (event) {
+            alert("Изменен content_object " + event.data);
+        };
+
+        socket.onerror = function (error) {
+            console.log("Ошибка " + error.message);
+        };
+
+    </script>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}
