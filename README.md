@@ -12,7 +12,7 @@ docker-compose up
 **Запуск тестов**
 
 ```
-docker-compose exec app run-e2e-tests.sh
+docker-compose exec app ./run-e2e-tests.sh
 
 ```
 
