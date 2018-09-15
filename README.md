@@ -12,7 +12,7 @@ docker-compose up
 **Запуск тестов**
 
 ```
-docker-compose exec app /bin/bash -c "cd e2e && ./runtests.sh"
+docker-compose exec app run-e2e-tests.sh
 
 ```
 
